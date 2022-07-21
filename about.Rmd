@@ -1,5 +1,491 @@
 ---
 title: "about"
+author: "Marcos"
+date: '14-07-2022'
+output: 
+    html_document:
+        highlight: textmate
+        theme: flatly
+        number_sections: yes
+        toc: yes
+        toc_float:
+            collapsed: yes
+            smooth_scroll: yes
 ---
 
-# About My Website
+```{r include = FALSE}
+
+library(tidyverse)
+library(ggplot2)
+
+```
+
+GRAMMAR OF GRAPHICS -> DATA-> MAPPING -> GEOMETRY
+
+# Pontos {.tabset .tabset-fade}
+
+## Normal 
+
+```{r,out.width="40%", message = FALSE}
+iris %>% ggplot(aes(x=Petal.Length, y=Petal.Width))+
+  geom_point()+
+  geom_smooth()
+```
+
+## Linear 
+
+```{r,out.width="40%", message = FALSE}
+iris %>% ggplot(aes(x=Petal.Length, y=Sepal.Width))+
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+## Linhas médias múltiplas variáveis
+
+```{r,out.width="40%", message = FALSE}
+starwars %>% 
+  filter(height>60 & mass<500) %>% 
+  ggplot(aes(height,mass, color = sex))+ #color = cor da linha #fill cor do preenchimento
+  geom_point(size = 4, alpha=0.7)+
+  geom_smooth(method = lm, se = F) +#lm -> line method #SE: AQUELA BORDA CINZA
+  theme_light()+
+  labs(title = "Scatter Graph",x="Height of Characters")+
+  theme(plot.title = element_text(hjust = 0.5)) #titulo no centro
+```
+
+## Com pontos no mesmo lugar
+
+```{r,out.width="40%", message = FALSE}
+df <- data.frame(x=c(1,2,3,3,3,2,1,1,1),y=c(5,8,4,5,4,5,6,6,6))
+df %>% 
+  ggplot(aes(x,y))+
+  geom_count()
+```
+
+## Outro
+
+```{r ,out.width="40%"}
+starwars %>% 
+  filter(height>60 & mass<500) %>% 
+  ggplot(aes(height,mass, color = sex))+ #color = cor da linha #fill cor do preenchimento
+  geom_point(size = 4, alpha=0.7)+
+  theme_light()+
+  labs(title = "Boxplot of Height",x="Height of Characters")+
+  theme(plot.title = element_text(hjust = 0.5)) #titulo no centro
+
+``` 
+
+## Smoothed Models
+
+```{r ,out.width="40%", message=FALSE,warning=FALSE}
+starwars %>% 
+  filter(mass<200) %>% 
+  ggplot(aes(height,mass, color = sex))+ #color = cor da linha #fill cor do preenchimento
+  geom_point(size = 4, alpha=0.7)+
+  geom_smooth()+
+  facet_wrap(~sex)+ #Faz um plot pra cada categoria de sexo que existe
+  theme_light()+
+  labs(title = "Boxplot of Height",x="Height of Characters")+
+  theme(plot.title = element_text(hjust = 0.5)) #titulo no centro
+
+
+``` 
+
+# Boxplot {.tabset .tabset-fade}
+
+## Simples
+
+```{r ,out.width="40%"}
+ggplot(iris,aes(Species,Sepal.Length)) +
+  geom_boxplot()
+
+``` 
+
+## Com gracinhas
+
+```{r ,out.width="40%"}
+starwars %>% 
+  drop_na(height) %>% 
+  ggplot(aes(height))+
+  coord_flip()  +  #inverte os eixos x e y
+  geom_boxplot(fill = "steelblue")+
+  theme_light()+
+  labs(title = "Boxplot of Height",x="Height of Characters")+
+  theme(plot.title = element_text(hjust = 0.5)) #titulo no centro
+``` 
+
+## Com pontos por cima
+
+```{r}
+# Boxplots of mpg by number of gears 
+# observations (points) are overlayed and jittered
+qplot(gear, mpg, data=mtcars, geom=c("boxplot", "jitter"), 
+   fill=gear, main="Mileage by Gear Number",
+   xlab="", ylab="Miles per Gallon")
+```
+
+## Violin
+
+```{r ,out.width="40%"}
+ggplot(iris,aes(Species,Sepal.Length)) +
+  geom_violin()
+
+``` 
+
+
+
+
+
+
+# Histograma {.tabset .tabset-fade}
+
+
+## Básico
+
+```{r ,message = FALSE, out.width="40%" }
+iris %>% ggplot(aes(Sepal.Width))+
+  geom_histogram()
+```
+
+## Com legendas
+
+```{r ,message = FALSE, out.width="40%" }
+starwars %>% 
+  drop_na(height) %>% 
+  ggplot(aes(height))+
+  geom_histogram()+
+  labs(title = "Histograms of Height",x="Height of Characters")
+```
+
+## Set nº bins
+
+```{r,out.width="40%"}
+iris %>% ggplot(aes(Sepal.Width))+
+  geom_histogram(bins = 10, fill="#009999",colour="white")
+```
+
+## Criar Distribuição Normal
+
+```{r,out.width="40%"}
+set.seed(123)
+df <- data.frame(x=rnorm(1000))
+ggplot(df,aes(x))+
+  geom_histogram(bins = 10)
+
+df <- data.frame(x=rgamma(1000,shape = 1/2))
+ggplot(df,aes(x))+
+  geom_histogram(bins = 10,)
+
+df <- data.frame(x=rbinom(1000, 150,.05))
+ggplot(df,aes(x))+
+  geom_histogram(bins = 10)
+```
+
+## Com medidas
+
+```{r,out.width="40%"}
+cars$length <- cars$speed
+bw <- diff(range(cars$length)) / (2 * IQR(cars$length) / length(cars$length)^(1/3))
+
+sumstatz <- data.frame(whichstat = c("mean",
+                                     "sd upr", 
+                                     "sd lwr"),
+                       value     = c(mean(cars$length),
+                                     mean(cars$length)+sd(cars$length),
+                                     mean(cars$length)-sd(cars$length)))
+
+ggplot(data=cars, aes(length)) + 
+  geom_histogram(aes(y =..density..),
+                 col="black",
+                 binwidth = bw) + 
+  geom_density(col="black") + 
+  geom_vline(data=sumstatz,aes(xintercept = value,
+                               linetype = whichstat,
+                               col = whichstat),size=1)+
+  labs(title='Length Plot', x='Length', y='Count')
+```
+
+# Barras {.tabset .tabset-fade}
+
+## Select random samples
+
+```{r ,out.width="40%" }
+
+set.seed(1964)
+idx <- sample(1:150, 10) #Pega 10 valores de 150 Ex: [1,4,63,121...] na proxima execução [2,7,21,51]
+iris[idx,]
+ggplot(iris[idx,],aes(x=Species))+
+  geom_bar(fill="#009999",colour="white")
+
+```
+
+## Basic
+
+```{r}
+
+data(starwars)
+starwars %>% ggplot(aes(x=species)) +
+  geom_bar()
+  theme(plot.title = element_text(hjust = 0.5)) #titulo no centro
+  
+```
+
+## Ordered
+
+```{r}
+
+  # Prepare data: group mean city mileage by manufacturer.
+cty_mpg <- aggregate(mpg$cty, by=list(mpg$manufacturer), FUN=mean)  # aggregate
+colnames(cty_mpg) <- c("make", "mileage")  # change column names
+cty_mpg <- cty_mpg[order(cty_mpg$mileage), ]  # sort
+cty_mpg$make <- factor(cty_mpg$make, levels = cty_mpg$make)  # to retain the order in plot.
+
+  # Draw plot
+ggplot(cty_mpg, aes(x=make, y=mileage)) + 
+  geom_bar(stat="identity", width=.5, fill="tomato3") + 
+  labs(title="Ordered Bar Chart", 
+       subtitle="Make Vs Avg. Mileage", 
+       caption="source: mpg") + 
+  theme(axis.text.x = element_text(angle=65, vjust=0.6))
+  
+```
+
+# Densidade {.tabset .tabset-fade}
+
+## Densidade simples
+
+```{r,out.width="40%"}
+iris %>% ggplot(aes(Sepal.Width))+
+  geom_density()
+```
+
+## Com 2 variáveis
+
+```{r,out.width="40%"}
+#DENSITY PLOTS
+data(starwars)
+starwars %>% 
+  drop_na(height) %>% 
+  filter(sex %in% c("male","female")) %>% 
+  ggplot(aes(height, color = sex, fill = sex))+ #color = cor da linha #fill cor do preenchimento
+  geom_density(size=1,alpha=0.2)+
+  theme_light()+
+  labs(title = "Desity of Heights",x="Height of Characters")
+```
+
+## Com médias
+
+```{r,out.width="40%"}
+    #ADD MIDDLE LINE
+library(gapminder)
+europe <- gapminder %>% filter(continent %in% "Europe") %>% select(lifeExp)
+mean_life_europe <- mean(europe$lifeExp)
+africa <- gapminder %>% filter(continent %in% "Africa") %>% select(lifeExp)
+mean_life <- mean(africa$lifeExp)
+gapminder %>% 
+  filter(continent %in% c("Africa","Europe")) %>% 
+  ggplot(aes(lifeExp, color = continent, fill = continent))+ #color = cor da linha #fill cor do preenchimento
+  geom_density(size=1,alpha=0.2)+
+  theme_light()+
+  labs(title = "Life Expectancy Per Continent",x="Age")+
+  theme(plot.title = element_text(hjust = 0.5))+ #titulo no centro
+  
+  geom_vline(xintercept=mean_life, size=1.5, color="red")+
+  geom_text(aes(x=mean_life, label=paste0("Mean\n",mean_life), y=0.1))+
+  
+  geom_vline(xintercept=mean_life_europe, size=1.5, color="blue")+
+  geom_text(aes(x=mean_life_europe, label=paste0("Mean\n",mean_life_europe), y=0.1))
+```
+
+# Lines {.tabset .tabset-fade}
+
+## Lines
+
+```{r,out.width="40%"}
+ggplot(cars,aes(x=speed,y=dist)) +
+  geom_line()+
+  geom_point()
+```
+
+
+# Tree Map
+
+```{r,out.width="40%"}
+  library(treemapify)
+  group <- paste("Group", 1:9)
+  subgroup <- c("A", "C", "B", "A", "A",
+                "C", "C", "B", "B")
+  value <- c(7, 25, 50, 5, 16,
+             18, 30, 12, 41)
+  
+  df <- data.frame(group, subgroup, value) 
+  ggplot(df, aes(area = value, fill = group,label = paste(group, value, sep = "\n"))) +
+    geom_treemap()+
+    geom_treemap_text(colour = "white",
+                      place = "centre",
+                      size = 15) +
+    theme(legend.position = "none")
+```
+
+
+# 3D Graphs
+
+```{r,out.width="80%", message=FALSE}
+#3D GRAPHS
+set.seed(417)
+library(plotly)
+temp <- rnorm(100, mean=30, sd=5)
+pressure <- rnorm(100)
+dtime <- 1:100
+
+plot_ly(x=temp, y=pressure, z=dtime, type="scatter3d", mode="markers", color=temp)
+
+```
+
+
+# Hierarchical Dendogram
+
+```{r,out.width="80%"}
+  # Load data
+rm(starwars)
+starwars <- starwars %>% drop_na(everything())
+row <- starwars$name
+starwars <- Filter(is.numeric, starwars)
+starwars <- as.data.frame(starwars)
+row.names(starwars) <- row
+  # Compute distances and hierarchical clustering
+dd <- dist(scale(starwars), method = "euclidean")
+hc <- hclust(dd, method = "ward.D2")
+  # Convert hclust into a dendrogram and plot
+hcd <- as.dendrogram(hc)
+  # Default plot
+plot(hcd, type = "rectangle", ylab = "Ordem de relação",main="Dendograma de relação física e de idade dos personagens")
+
+
+```
+
+# Pie Chart
+
+```{r,out.width="80%"}
+  #Convert table of observations to dataframe
+  data(starwars)
+  table <- table(starwars$species)
+  df <- t(rbind(table))
+  df <- as.data.frame(df)
+  df$species <- row.names(df)
+  
+  bp<- ggplot(df, aes(x="", y=table, fill=species))+
+    geom_bar(width = 1, stat = "identity")
+  pie <- bp + coord_polar("y", start=0)
+  pie
+```
+
+# Piramid Comparation
+
+```{r,out.width="80%"}
+email_campaign_funnel <- read.csv("https://raw.githubusercontent.com/selva86/datasets/master/email_campaign_funnel.csv")
+  # X Axis Breaks and Labels 
+brks <- seq(-15000000, 15000000, 5000000)
+lbls = paste0(as.character(c(seq(15, 0, -5), seq(5, 15, 5))), "m")
+
+  # Plot
+library(ggthemes)
+options(scipen = 999)  # turns of scientific notations like 1e+40
+a <- ggplot(email_campaign_funnel, aes(x = Stage, y = Users, fill = Gender)) +   # Fill column
+  geom_bar(stat = "identity", width = .6) +   # draw the bars
+  scale_y_continuous(breaks = brks,   # Breaks
+                     labels = lbls) + # Labels
+  coord_flip() +  # Flip axes
+  labs(title="Email Campaign Funnel") +
+  theme_tufte() +  # Tufte theme from ggfortify
+  theme(plot.title = element_text(hjust = .5), 
+        axis.ticks = element_blank()) +   # Centre plot title
+  scale_fill_brewer(palette = "Dark2")  # Color palette
+  #PLOT INTERATIVO
+  library(plotly) 
+  ggplotly(a)
+  
+```
+
+# Bubble Chart -> 2 numerical variables and categorical variable
+
+```{r,out.width="80%"}
+starwars %>% 
+  filter(mass<200) %>% 
+  ggplot(aes(height,mass))+
+  geom_jitter(aes(col = sex, size = birth_year))+
+  geom_smooth(aes(col=sex),method="lm",se=F)
+```
+
+# Ridge Plot
+
+```{r,out.width="80%"}
+
+```
+
+# PLOT OPTIONS
+
+```{r}
+
+df <- data.frame(speed = 10, dist = 160)
+
+
+#PATCHWORK Plot multiple graphs
+library(patchwork)
+data(starwars)
+p1 <- ggplot(starwars,aes(x=species,fill=height)) +
+  geom_bar()
+
+p2 <- ggplot(starwars,aes(x=species)) +
+  geom_bar(color = "red",fill= "white")
+
+p1/p2
+(p1 | p2) / p2
+p1 | (p1/p1)
+
+#ADD Y LIMITS
+starwars %>% 
+  ggplot(aes(height,mass)) +  
+  geom_point()+
+  scale_y_continuous(limits = c(20, 200))+
+  coord_flip()  #inverte os eixos x e y
+  
+
+#FACET WRAP -PLOT GRAPHS FOR MULTIPLE VARIABLES: EX: MALE/FEMALE
+starwars %>% 
+  drop_na(everything()) %>% 
+  filter(mass <200) %>%
+  ggplot(aes(height,mass)) +
+  geom_point(aes(colour = hair_color, size = hair_color),alpha = 0.4) + 
+  facet_wrap(~sex) +
+  labs(x = 'Height', 
+       y= "Mass", 
+       title = "Star Wars Plot")+
+  theme_minimal()
+
+#PLOT ALL VARIABLE COLUMNS BY ALL NUMERIC COLUMNS
+#AND FILTER BASED ON COLORS
+starwars$sex <- as.factor(starwars$sex) 
+starwars <- starwars %>% 
+  mutate(sex = factor(sex,levels = c("male","female","hermaphroditic","none")))
+levels(starwars$sex) 
+
+factors <- factor(starwars$sex)
+colors <- c('blue', 'red','purple','black')[unclass(factors)]
+pairs(Filter(is.numeric, starwars),col=colors)
+
+#PLOT MORE THAN 1 LINE
+df <- starwars
+df %>% 
+  gather(variables,value,mass,birth_year) %>% 
+  ggplot(aes(height,value,colour=variables)) +  
+  geom_point()
+
+#INTERATIVE PLOT
+a <- ggplot(starwars,aes(x=gender)) +
+  geom_bar()  
+library(plotly) 
+ggplotly(a)
+
+
+```
